@@ -1,0 +1,1510 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TelecomIQ — From Raw Feed to Recommendation | Track A</title>
+<style>
+/* ============================================================
+   TOKENS — light is the default; dark is a selected set of steps
+   from the same ramps, not an automatic flip.
+   ============================================================ */
+:root{
+  --plane:#f9f9f7; --surface:#fcfcfb;
+  --ink:#0b0b0b; --ink2:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --axis:#c3c2b7; --hair:rgba(11,11,11,0.10);
+  --s1:#2a78d6;            /* categorical slot 1 — blue */
+  --s2:#eb6834;            /* categorical slot 2 — orange */
+  --s3:#1baf7a;            /* categorical slot 3 — aqua */
+  --neg:#e34948;           /* diverging red pole */
+  --b100:#cde2fb; --b200:#9ec5f4; --b250:#86b6ef; --b450:#2a78d6; --b600:#184f95;
+  --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b;
+  --success-text:#006300;
+  --zero:#f0efec;          /* diverging neutral midpoint */
+  --code-bg:#f3f2ee;
+}
+:root[data-theme="dark"]{
+  --plane:#0d0d0d; --surface:#1a1a19;
+  --ink:#ffffff; --ink2:#c3c2b7; --muted:#898781;
+  --grid:#2c2c2a; --axis:#383835; --hair:rgba(255,255,255,0.10);
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+  --neg:#e66767;
+  --b100:#184f95; --b200:#1c5cab; --b250:#256abf; --b450:#3987e5; --b600:#86b6ef;
+  --success-text:#0ca30c;
+  --zero:#383835;
+  --code-bg:#111110;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%}
+body{
+  background:var(--plane); color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+  overflow:hidden;
+}
+
+/* ---------- stage ---------- */
+#stage{position:fixed;inset:0;display:grid;place-items:center}
+#scaler{width:1280px;height:720px;transform-origin:center center;position:relative}
+
+.slide{
+  position:absolute;inset:0;width:1280px;height:720px;
+  background:var(--surface);
+  padding:52px 64px 56px;
+  display:none;flex-direction:column;
+  box-shadow:0 1px 0 var(--hair), 0 18px 48px rgba(0,0,0,.07);
+}
+.slide.on{display:flex}
+
+/* ---------- slide chrome ---------- */
+.kicker{
+  font-size:12.5px;font-weight:650;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);margin:0 0 10px;
+}
+h1.title{font-size:40px;line-height:1.1;font-weight:660;margin:0 0 6px;letter-spacing:-.018em}
+h1.title .thin{font-weight:400;color:var(--ink2)}
+.sub{font-size:18px;color:var(--ink2);margin:0 0 22px;line-height:1.45;max-width:1010px}
+.foot{
+  position:absolute;left:64px;right:64px;bottom:20px;
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:11.5px;color:var(--muted);border-top:1px solid var(--hair);padding-top:9px;
+}
+.foot .num{font-variant-numeric:tabular-nums}
+.body{flex:1;min-height:0}
+
+/* ---------- type helpers ---------- */
+.lede{font-size:20px;line-height:1.5;color:var(--ink);max-width:980px}
+.small{font-size:14px;color:var(--ink2);line-height:1.5}
+.tiny{font-size:12.5px;color:var(--muted);line-height:1.5}
+strong{font-weight:640}
+.mono{font-variant-numeric:tabular-nums}
+
+/* ---------- layout helpers ---------- */
+.row{display:flex;gap:26px}
+.col{flex:1;min-width:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.stack{display:flex;flex-direction:column;gap:14px}
+
+/* ---------- cards ---------- */
+.card{
+  border:1px solid var(--hair);border-radius:10px;padding:18px 20px;background:var(--surface);
+}
+.card h3{margin:0 0 4px;font-size:14px;font-weight:650;letter-spacing:.01em}
+.card .q{font-size:12.5px;color:var(--muted);margin:0 0 12px;line-height:1.45}
+.card.accent{border-left:3px solid var(--s1)}
+.card.flag{border-left:3px solid var(--critical)}
+.card.ok{border-left:3px solid var(--good)}
+
+/* ---------- stat tiles & hero ---------- */
+.tile .label{font-size:12.5px;color:var(--ink2);margin:0 0 4px}
+.tile .value{font-size:30px;font-weight:660;letter-spacing:-.02em;line-height:1.05}
+.tile .note{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.4}
+.hero{font-size:66px;font-weight:670;letter-spacing:-.03em;line-height:1}
+.hero-cap{font-size:13px;color:var(--ink2);margin-top:6px;max-width:300px;line-height:1.45}
+
+/* ---------- tables ---------- */
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+caption{caption-side:top;text-align:left;font-size:12px;color:var(--muted);padding-bottom:7px}
+th{
+  text-align:right;font-weight:620;color:var(--ink2);font-size:11.5px;
+  letter-spacing:.05em;text-transform:uppercase;
+  padding:0 10px 7px;border-bottom:1px solid var(--axis);
+}
+th:first-child,td:first-child{text-align:left}
+td{padding:7px 10px;border-bottom:1px solid var(--hair);text-align:right;font-variant-numeric:tabular-nums}
+tr.hi td{background:color-mix(in srgb,var(--s1) 8%,transparent);font-weight:620}
+tr.dim td{color:var(--muted)}
+td.w{font-variant-numeric:normal;text-align:left}
+
+/* ---------- console output blocks ---------- */
+pre.out{
+  margin:0;background:var(--code-bg);border:1px solid var(--hair);border-radius:8px;
+  padding:12px 14px;font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;
+  font-size:11.5px;line-height:1.62;color:var(--ink2);white-space:pre;overflow:hidden;
+}
+pre.out b{color:var(--ink);font-weight:640}
+.outlbl{font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin:0 0 6px}
+
+/* ---------- legend ---------- */
+.legend{display:flex;gap:18px;flex-wrap:wrap;align-items:center;font-size:12.5px;color:var(--ink2)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.legend .ln{display:inline-block;width:16px;height:2px;margin-right:6px;vertical-align:3px}
+
+/* ---------- meters ---------- */
+.meter{margin-bottom:14px}
+.meter .mrow{display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;color:var(--ink2)}
+.meter .mrow b{color:var(--ink);font-weight:640;font-variant-numeric:tabular-nums}
+.meter .track{height:10px;border-radius:5px;background:var(--b100);overflow:hidden}
+.meter .fill{height:100%;border-radius:5px;background:var(--b450)}
+.meter .fill.dim{background:var(--b250)}
+
+/* ---------- SIAV ---------- */
+.siav{display:grid;grid-template-columns:104px 1fr;gap:0}
+.siav .k{
+  font-size:12px;font-weight:660;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+  padding:14px 0;border-top:1px solid var(--hair);
+}
+.siav .v{padding:14px 0 14px 8px;border-top:1px solid var(--hair);font-size:16.5px;line-height:1.5}
+.siav .k.first,.siav .v.first{border-top:none;padding-top:0}
+.siav .v b{font-weight:650}
+
+/* ---------- flow ---------- */
+.flow{display:flex;align-items:stretch;gap:0}
+.flow .step{flex:1;padding:14px 14px 14px 18px;border-left:2px solid var(--b200);position:relative}
+.flow .step:first-child{border-left:2px solid var(--s1)}
+.flow .step .n{font-size:11px;font-weight:660;color:var(--muted);letter-spacing:.09em}
+.flow .step .t{font-size:14px;font-weight:640;margin:5px 0 5px}
+.flow .step .d{font-size:12px;color:var(--ink2);line-height:1.45}
+
+/* ---------- title slide ---------- */
+.title-slide{padding:64px 64px 56px}
+.rule{height:3px;width:64px;background:var(--s1);border-radius:2px;margin:0 0 26px}
+.team{width:100%;font-size:14px;margin-top:6px}
+.team th{font-size:11px}
+.team td{padding:9px 10px;text-align:left;font-variant-numeric:normal}
+.team td.nm{font-weight:640;width:210px;white-space:nowrap}
+.team td.ro{color:var(--ink2);width:210px}
+.team td.ow{color:var(--muted);font-size:13px}
+.ph{color:var(--muted);font-weight:400;font-style:italic}
+
+/* ---------- badges ---------- */
+.badge{
+  display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:620;
+  padding:4px 9px;border-radius:20px;border:1px solid var(--hair);color:var(--ink2);
+}
+.badge.crit{color:var(--critical);border-color:color-mix(in srgb,var(--critical) 40%,transparent)}
+.badge.good{color:var(--success-text);border-color:color-mix(in srgb,var(--good) 40%,transparent)}
+.badge svg{width:12px;height:12px}
+
+/* ---------- chart bits ---------- */
+svg .gl{stroke:var(--grid);stroke-width:1}
+svg .ax{stroke:var(--axis);stroke-width:1}
+svg .tick{fill:var(--muted);font-size:11.5px;font-variant-numeric:tabular-nums}
+svg .lbl{fill:var(--ink);font-size:12.5px;font-weight:620;font-variant-numeric:tabular-nums}
+svg .lbl2{fill:var(--ink2);font-size:12px}
+svg .cat{fill:var(--ink2);font-size:12.5px}
+svg .ann{fill:var(--muted);font-size:11.5px}
+svg .hit{fill:transparent;cursor:default}
+
+#tip{
+  position:fixed;z-index:60;pointer-events:none;opacity:0;transition:opacity .09s;
+  background:var(--surface);border:1px solid var(--hair);border-radius:8px;
+  box-shadow:0 6px 20px rgba(0,0,0,.14);padding:8px 11px;font-size:12px;color:var(--ink);
+  max-width:250px;line-height:1.45;
+}
+#tip b{font-variant-numeric:tabular-nums}
+
+/* ---------- deck UI ---------- */
+#bar{position:fixed;top:0;left:0;height:3px;background:var(--s1);z-index:50;transition:width .18s}
+#ui{
+  position:fixed;bottom:14px;right:16px;z-index:50;display:flex;gap:8px;align-items:center;
+  font-size:12px;color:var(--muted);
+}
+#ui button{
+  font:inherit;font-size:12px;color:var(--ink2);background:var(--surface);
+  border:1px solid var(--hair);border-radius:7px;padding:5px 10px;cursor:pointer;
+}
+#ui button:hover{color:var(--ink)}
+#count{font-variant-numeric:tabular-nums;padding:0 4px}
+
+#ov{
+  position:fixed;inset:0;z-index:70;background:var(--plane);display:none;
+  overflow:auto;padding:26px;
+}
+#ov.on{display:block}
+#ovgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;max-width:1500px;margin:0 auto}
+.thumb{position:relative;cursor:pointer;border-radius:8px;overflow:hidden;border:1px solid var(--hair);background:var(--surface)}
+.thumb.cur{outline:2px solid var(--s1);outline-offset:1px}
+.thumb .tw{width:100%;aspect-ratio:16/9;overflow:hidden;position:relative}
+.thumb .tn{position:absolute;bottom:5px;right:8px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.thumb .tt{padding:8px 10px;font-size:12px;color:var(--ink2);border-top:1px solid var(--hair);line-height:1.35}
+
+/* ---------- print → PDF ---------- */
+@page{size:13.333in 7.5in;margin:0}
+@media print{
+  body{overflow:visible;background:#fff}
+  #stage{position:static;display:block}
+  #scaler{width:auto;height:auto;transform:none!important}
+  #bar,#ui,#ov,#tip{display:none!important}
+  .slide{
+    position:relative;display:flex!important;inset:auto;
+    width:13.333in;height:7.5in;page-break-after:always;break-after:page;box-shadow:none;
+  }
+  .slide:last-child{page-break-after:auto}
+}
+</style>
+</head>
+<body>
+
+<div id="bar"></div>
+<div id="stage"><div id="scaler">
+
+<!-- ======================= 1 · TITLE ======================= -->
+<section class="slide title-slide">
+  <div class="body">
+    <p class="kicker">Advanced AI &amp; ML · Telecom Data Analytics · Module 8 · Final Capstone</p>
+    <h1 class="title" style="font-size:52px;margin-bottom:12px">TelecomIQ<span class="thin"> — from raw feed to recommendation</span></h1>
+    <div class="rule"></div>
+    <p class="sub" style="font-size:20px;margin-bottom:8px">
+      <strong>Track A — Churn prediction and retention strategy.</strong>
+      Which subscribers are we about to lose, which of them is worth spending money to keep,
+      and what should we spend it on?
+    </p>
+    <p class="tiny" style="margin:0 0 26px">
+      3,200 subscribers · 6 months of usage · one governed dataset · one costed decision
+    </p>
+
+    <table class="team">
+      <thead><tr><th>Team member</th><th>Area of ownership</th><th>Owns, specifically</th></tr></thead>
+      <tbody id="teamRows"></tbody>
+    </table>
+    <p class="tiny" style="margin-top:14px">
+      Every member can explain the whole project, not only their own part.
+    </p>
+  </div>
+  <div class="foot"><span>TelecomIQ · Track A</span><span>Day 10 review</span><span class="num"></span></div>
+</section>
+
+<!-- ======================= 2 · THE PROBLEM ======================= -->
+<section class="slide">
+  <p class="kicker">The problem</p>
+  <h1 class="title">We are losing a quarter of the book<span class="thin"> — and we find out too late</span></h1>
+  <p class="sub">
+    Churn is not the expensive part. <em>Learning about churn after the fact</em> is the expensive part —
+    a subscriber who has already ported out cannot be retained at any price.
+  </p>
+  <div class="body">
+    <div class="row" style="align-items:flex-start">
+      <div style="width:330px;flex:none">
+        <div class="hero" style="color:var(--ink)">₹45.2L</div>
+        <p class="hero-cap">
+          of subscriber lifetime value sitting in the <strong>769 subscribers</strong> our book is
+          expected to lose — 24.0% of 3,200, at ₹5,880 lifetime value each.
+        </p>
+      </div>
+      <div class="col stack">
+        <div class="card flag">
+          <h3>Today the business learns about churn from its own retention offer</h3>
+          <p class="small" style="margin:0">
+            <strong>84.3%</strong> of the subscribers who left had already been sent a retention offer.
+            Only <strong>5.1%</strong> of the ones who stayed had. The offer is not a warning signal —
+            it is the record of somebody having spotted the problem by hand, usually far too late,
+            and always one subscriber at a time.
+          </p>
+        </div>
+        <div class="grid3">
+          <div class="card tile"><p class="label">Subscribers in the book</p><div class="value">3,200</div><p class="note">after de-duplication</p></div>
+          <div class="card tile"><p class="label">Observed churn rate</p><div class="value">24.0%</div><p class="note">769 subscribers</p></div>
+          <div class="card tile"><p class="label">Cost of a retention contact</p><div class="value">₹300</div><p class="note">19.6× cheaper than a loss</p></div>
+        </div>
+        <div class="card accent">
+          <h3>What a working system has to do instead</h3>
+          <p class="small" style="margin:0">
+            Score every subscriber overnight → rank them by <em>money at risk</em>, not by risk alone →
+            hand the retention team a list short enough to actually call → and price the campaign
+            before anyone approves it. That is the whole of Track A.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>The problem</span><span>Why an operator cares</span><span class="num"></span></div>
+</section>
+
+<!-- ======================= 3 · THE DATA ======================= -->
+<section class="slide">
+  <p class="kicker">Our data</p>
+  <h1 class="title">One row per subscriber<span class="thin"> — repaired, flagged, and reproducible</span></h1>
+  <p class="sub">
+    Two source files, folded to a single grain. Nothing was deleted to make the numbers look
+    tidier; every repair is recorded in a column you can audit.
+  </p>
+  <div class="body">
+    <div class="row">
+      <div class="col stack">
+        <div class="card">
+          <h3>Sources and grain</h3>
+          <table style="margin-top:8px">
+            <thead><tr><th>File</th><th>Rows in</th><th>Rows out</th><th>Grain</th></tr></thead>
+            <tbody>
+              <tr><td class="w">capstone_subscribers.csv</td><td>3,222</td><td>3,200</td><td class="w">one row per subscriber</td></tr>
+              <tr><td class="w">capstone_usage_monthly.csv</td><td>19,238</td><td>19,200</td><td class="w">one row per subscriber-month</td></tr>
+              <tr class="hi"><td class="w">→ modelling frame</td><td>—</td><td>3,200 × 32</td><td class="w">one row per subscriber</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card accent">
+          <h3>Four repairs, all of them recorded</h3>
+          <div class="small" style="margin-top:6px">
+            <div style="display:grid;grid-template-columns:26px 1fr;row-gap:7px;column-gap:8px">
+              <b>1</b><div><strong>18 region spellings → 6 cities.</strong> Six cities were spelled eighteen ways. Fixed <em>before</em> any group-by — otherwise every regional total is silently wrong.</div>
+              <b>2</b><div><strong>22 duplicate subscribers removed</strong> on the business key, plus 38 duplicate subscriber-months.</div>
+              <b>3</b><div><strong>157 numeric gaps median-filled</strong> (99 data, 58 recharge) — each one carries a <code>_was_missing</code> flag so the model can treat "not observed" as its own signal.</div>
+              <b>4</b><div><strong>Trend features added:</strong> recent-3-months vs earlier data use, and complaints normalised by tenure.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="width:412px;flex:none" class="stack">
+        <div>
+          <p class="outlbl">Pipeline output — verbatim</p>
+          <pre class="out">rows in file          : 3222
+distinct customer_id  : 3200
+duplicate customer_id : <b>22</b>
+distinct region values: <b>18</b>
+missing avg_monthly_gb: 99
+missing days_since_last_recharge: 58
+
+region values after cleaning: <b>6</b>
+  ['Bengaluru','Chennai','Delhi',
+   'Hyderabad','Kolkata','Mumbai']
+removed 22 duplicate rows, 3200 remain
+imputed: {'avg_monthly_gb': 99,
+          'days_since_last_recharge': 58}
+
+first run: 3200 rows  second run: 3200 rows
+<b>pipeline is idempotent</b></pre>
+        </div>
+        <div class="card ok">
+          <h3>Why "run it twice" is on this slide</h3>
+          <p class="small" style="margin:0">
+            A pipeline that cannot be run twice cannot be scheduled, and a pipeline that cannot be
+            scheduled is an analysis rather than a system. Ours reloads to the same 3,200 rows.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>Our data</span><span>Sources · grain · repairs</span><span class="num"></span></div>
+</section>
+
+<!-- ======================= 4 · LEAKAGE ======================= -->
+<section class="slide">
+  <p class="kicker">The honesty check that changed the project</p>
+  <h1 class="title">We deleted our own best score<span class="thin"> — on purpose</span></h1>
+  <p class="sub">
+    Two columns in the subscriber file fail the day-before test: <em>would this value exist, with this
+    value, the day before the subscriber churned?</em> Both had to come out — and taking them out cost
+    us a fifth of our headline number.
+  </p>
+  <div class="body">
+    <div class="row" style="align-items:flex-start">
+      <div style="width:300px;flex:none">
+        <div class="hero" style="color:var(--critical)">0.217</div>
+        <p class="hero-cap">
+          of ROC-AUC was pure leakage. A model scoring <strong>0.946</strong> would have been
+          presented as a success, deployed, and predicted <em>nothing</em> — because on the day you
+          need a score, nobody has sent the retention offer yet.
+        </p>
+      </div>
+      <div class="col">
+        <div class="card" style="padding-bottom:8px">
+          <h3>ROC-AUC, identical splits, one difference</h3>
+          <p class="q">Same features, same forest, same seed — only the two leaking columns move.</p>
+          <div id="chartLeak"></div>
+        </div>
+        <div class="grid2" style="margin-top:14px">
+          <div class="card flag">
+            <h3><span class="badge crit">removed</span> retention_offer_sent</h3>
+            <p class="small" style="margin:6px 0 0">
+              Sent to <strong>84.3%</strong> of leavers and <strong>5.1%</strong> of stayers. The offer
+              was <em>triggered by</em> a churn signal somebody had already spotted. Feeding it back in
+              asks the model to predict the past.
+            </p>
+          </div>
+          <div class="card flag">
+            <h3><span class="badge crit">removed</span> total_charges</h3>
+            <p class="small" style="margin:6px 0 0">
+              Correlates <strong>0.9995</strong> with ARPU × tenure. Perfectly valid for revenue
+              reporting; wrong for this target, because it contains the answer.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="tiny" style="margin-top:14px">
+      Leakage is a property of the <em>pairing</em> of feature and target, not of a column on its own —
+      which is why the audit is re-run whenever the target changes. <strong>0.729 is our honest
+      number</strong>, and every rupee figure in this deck is built on it.
+    </p>
+  </div>
+  <div class="foot"><span>Leakage audit</span><span>0.946 → 0.729</span><span class="num"></span></div>
+</section>
+
+<!-- ======================= 5 · MODEL vs BASELINE ======================= -->
+<section class="slide">
+  <p class="kicker">Our model, with the honest baseline beside it</p>
+  <h1 class="title">Predicting "nobody churns" is right 76% of the time<span class="thin"> — and worth nothing</span></h1>
+  <p class="sub">
+    Three classifiers on identical splits. All three land in the same neighbourhood, and every one
+    of them catches under a third of churners at the software default. That is the honest result on
+    this data — and the reason accuracy is not our metric.
+  </p>
+  <div class="body">
+    <div class="row">
+      <div class="col">
+        <div class="card">
+          <h3>Three classifiers, one split, no tuning</h3>
+          <table style="margin-top:10px">
+            <thead><tr><th>Model</th><th>ROC-AUC</th><th>Precision</th><th>Recall</th><th>Accuracy</th></tr></thead>
+            <tbody>
+              <tr><td class="w">Logistic regression</td><td>0.742</td><td>0.676</td><td>0.240</td><td>0.790</td></tr>
+              <tr class="dim"><td class="w">Decision tree</td><td>0.643</td><td>0.507</td><td>0.182</td><td>0.761</td></tr>
+              <tr class="hi"><td class="w">Random forest <span class="tiny">· chosen</span></td><td>0.729</td><td>0.739</td><td>0.089</td><td>0.774</td></tr>
+            </tbody>
+          </table>
+          <p class="tiny" style="margin:10px 0 0">
+            We chose the forest over the marginally higher logistic AUC because the decision we are
+            making is <em>who to ring</em>, and the forest's probability ranking held up better across
+            the threshold sweep on the next slide. Precision, recall and accuracy are all quoted at
+            the 0.50 default — which is exactly the setting we go on to reject.
+          </p>
+        </div>
+      </div>
+      <div style="width:436px;flex:none" class="stack">
+        <div class="card">
+          <h3>Accuracy: the metric that hides the finding</h3>
+          <p class="q">Both bars are "how often were we right?" on the same 800 held-out subscribers.</p>
+          <div class="meter">
+            <div class="mrow"><span>Predict nobody churns</span><b>76.0%</b></div>
+            <div class="track"><div class="fill dim" style="width:76%"></div></div>
+          </div>
+          <div class="meter" style="margin-bottom:2px">
+            <div class="mrow"><span>Our random forest at 0.50</span><b>77.4%</b></div>
+            <div class="track"><div class="fill" style="width:77.4%"></div></div>
+          </div>
+          <p class="tiny" style="margin:12px 0 0">
+            A gain of <strong>1.4 points</strong>. If accuracy were the headline, this project is a
+            failure. It is not the headline, because the two errors do not cost the same amount.
+          </p>
+        </div>
+        <div class="card accent">
+          <h3>The number that actually matters</h3>
+          <p class="small" style="margin:0">
+            At the 0.50 default the forest finds <strong>17 of 192</strong> churners in the test fold —
+            recall <strong>0.089</strong>. Nothing is wrong with the model. Something is wrong with
+            the threshold, and the threshold is a business decision, not a default.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>Model &amp; baseline</span><span>ROC-AUC 0.729 · recall 0.089 at 0.50</span><span class="num"></span></div>
+</section>
+
+<!-- ======================= 6 · THRESHOLD ECONOMICS ======================= -->
+<section class="slide">
+  <p class="kicker">The threshold is not a setting — it is the decision</p>
+  <h1 class="title">The same predictions, priced six ways</h1>
+  <p class="sub">
+    A missed churner costs ₹5,880. An unnecessary retention call costs ₹300. That ratio — 19.6 to
+    one — is the only thing that should decide where we draw the line. Nothing about the model
+    changes across this chart; only the line we draw through it.
+  </p>
+  <div class="body">
+    <div class="row">
+      <div class="col">
+        <div class="card">
+          <h3>Expected cost of being wrong, by threshold</h3>
+          <p class="q">800 held-out subscribers · 192 real churners · cost = missed × ₹5,880 + wasted call × ₹300</p>
+          <div id="chartCost"></div>
+        </div>
+      </div>
+      <div style="width:398px;flex:none" class="stack">
+        <div>
+          <p class="outlbl">Threshold sweep — verbatim</p>
+          <pre class="out">thresh  prec   rec  flagged  expected cost
+ 0.05  0.241 1.000     796    ₹1,81,200
+ <b>0.10  0.256 0.990     742    ₹1,77,360</b>
+ 0.15  0.282 0.932     635    ₹2,13,240
+ 0.20  0.322 0.833     497    ₹2,89,260
+ 0.30  0.444 0.552     239    ₹5,45,580
+ 0.50  0.739 0.089      23   ₹10,30,800
+
+theoretical optimum: <b>0.0485</b></pre>
+        </div>
+        <div class="card flag">
+          <h3>The uncomfortable part — say it out loud</h3>
+          <p class="small" style="margin:0">
+            At 19.6 to one the arithmetic wants us to ring <strong>742 of 800</strong> subscribers.
+            That is a real answer, and it tells us something true: at these costs the binding
+            constraint is not the model, it is <strong>how many calls the retention team can
+            actually make</strong>. So we set the threshold against capacity as well as cost — and on
+            slide 12 we show why the cheapest threshold here is <em>not</em> the one we ship.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>Threshold economics</span><span>₹1,77,360 vs ₹10,30,800 — same model</span><span class="num"></span></div>
+</section>
+
+<!-- ======================= 7 · CENTRAL FINDING ======================= -->
+<section class="slide">
+  <p class="kicker">The central finding</p>
+  <h1 class="title">The riskiest segment complains<span class="thin"> — it doesn't overspend</span></h1>
+  <p class="sub">
+    Four behavioural segments, clustered on usage and tenure only — region and plan were kept out of
+    the clustering and used afterwards to describe what we found.
+  </p>
+  <div class="body">
+    <div class="row">
+      <div class="col">
+        <div class="card">
+          <h3>Churn rate against spend — bubble area is segment size</h3>
+          <p class="q">One segment sits far above the book average, and it is not the expensive one.</p>
+          <div id="chartSeg"></div>
+        </div>
+      </div>
+      <div style="width:452px;flex:none" class="stack">
+        <div class="card flag">
+          <h3>Segment 0 — 392 subscribers, 12.2% of the base</h3>
+          <p class="small" style="margin:6px 0 10px">
+            Churns at <strong>40%</strong> against a book average of 24.0% — <strong>1.7×</strong> the
+            risk. Its defining feature is <strong>3.37 complaints in six months</strong> against
+            0.46–0.69 everywhere else. Mid-ARPU, mid-tenure, light data use. These are not
+            price-sensitive customers. They are <em>annoyed</em> customers.
+          </p>
+          <div id="chartComp"></div>
+        </div>
+        <div class="card accent">
+          <h3>But the biggest bill is not the biggest rate</h3>
+          <p class="small" style="margin:0 0 10px">
+            Segment 1 is half the book and churns at only 23% — yet it carries <strong>₹22.0L</strong>
+            of lifetime value at risk, more than twice segment 0's ₹9.2L. Rate tells you who to worry
+            about; <em>rate × size × value</em> tells you where the money is.
+          </p>
+          <div id="chartLtv"></div>
+        </div>
+      </div>
+    </div>
+    <p class="tiny" style="margin-top:12px">
+      We chose k = 4 on a commercial test, not a statistical one: inertia fell smoothly with no elbow
+      and silhouette drifted down from 0.238 (k=2) to 0.158 (k=8), so the data offered no natural
+      answer. Four is the number of genuinely different campaigns the retention team could run.
+    </p>
+  </div>
+  <div class="foot"><span>Central finding</span><span>Segment 0 · 40% churn · complaint-driven</span><span class="num"></span></div>
+</search>
+  <div class="foot"><span>Central finding</span><span class="num"></span></div>
+</section>
+
+<!-- ======================= 8 · SCORE → CALL LIST ======================= -->
+<section class="slide">
+  <p class="kicker">From a probability to somebody's Monday morning</p>
+  <h1 class="title">What actually happens when the model says 0.62</h1>
+  <p class="sub">
+    A score nobody acts on is not a finding. Here is the physical path from the nightly job to a
+    retention agent's dialler — and the one line of arithmetic that decides who is on it.
+  </p>
+  <div class="body">
+    <div class="card" style="padding:6px 0 6px 0;border:none">
+      <div class="flow">
+        <div class="step"><div class="n">01 · 02:00</div><div class="t">Pipeline runs</div><div class="d">The idempotent ETL rebuilds the 3,200-row frame. A second run changes nothing, so a retry is safe.</div></div>
+        <div class="step"><div class="n">02 · 02:20</div><div class="t">Every subscriber scored</div><div class="d">The forest is refit on the full frame <em>for scoring only</em> — never for reporting a metric.</div></div>
+        <div class="step"><div class="n">03 · 02:25</div><div class="t">Ranked on money, not risk</div><div class="d">expected loss = risk × ARPU × 12. A ₹800 subscriber at 0.45 outranks a ₹120 one at 0.70.</div></div>
+        <div class="step"><div class="n">04 · 08:00</div><div class="t">Capacity-sized list lands</div><div class="d">Top N by expected loss, where N is the retention team's real daily call capacity — not the model's preference.</div></div>
+        <div class="step"><div class="n">05 · next run</div><div class="t">Outcome written back</div><div class="d">Contacted / saved / lost is logged, which is what eventually replaces our biggest assumption.</div></div>
+      </div>
+    </div>
+    <div class="row" style="margin-top:6px">
+      <div style="width:428px;flex:none" class="card accent">
+        <h3>The worked example we will be asked for</h3>
+        <table style="margin-top:10px">
+          <tbody>
+            <tr><td class="w">Model score (risk of churn)</td><td>0.62</td></tr>
+            <tr><td class="w">ARPU</td><td>₹430</td></tr>
+            <tr><td class="w">Annual revenue at stake</td><td>₹5,160</td></tr>
+            <tr class="hi"><td class="w">Expected loss = 0.62 × 430 × 12</td><td>₹3,199</td></tr>
+          </tbody>
+        </table>
+        <p class="tiny" style="margin:10px 0 0">
+          Ranked 41st on tomorrow's list. An agent sees the score, the segment, the complaint count
+          and the last recharge date — never the raw probability alone, because "0.62" is not a
+          conversation opener.
+        </p>
+      </div>
+      <div class="col stack">
+        <div class="card">
+          <h3>Why we rank on value and not on risk</h3>
+          <p class="small" style="margin:0">
+            A list sorted by risk alone tells the retention team to spend the same ₹300 on a
+            ₹120-a-month subscriber as on an ₹800 one. Both calls cost the same; the two outcomes are
+            worth <strong>6.7× different</strong> amounts. Ranking on expected loss reorders the list
+            substantially — the top-300 by risk and the top-300 by expected loss are not the same 300
+            people, and the difference is where the return comes from.
+          </p>
+        </div>
+        <div class="card flag">
+          <h3>The trap we avoided</h3>
+          <p class="small" style="margin:0">
+            The scoring model is refit on all 3,200 rows so that everyone gets a score. We report
+            <strong>no metric</strong> from that refit — every number in this deck comes from the
+            held-out fold. Scoring and evaluating are two different jobs, and mixing them is how an
+            honest team accidentally publishes a fabricated number.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>Score → call list</span><span>expected loss = risk × ARPU × 12</span><span class="num"></span></div>
+</section>
+
+<!-- ======================= 9 · UNLABELLED CASES ======================= -->
+<section class="slide">
+  <p class="kicker">A second finding, free from the same data</p>
+  <h1 class="title">192 subscriber-months nobody had flagged</h1>
+  <p class="sub">
+    An isolation forest over monthly behaviour surfaces three patterns hiding in the usage file:
+    SIM-box bypass, subscription fraud, and revenue leakage — genuine usage billed at exactly zero.
+    None of them were labelled.
+  </p>
+  <div class="body">
+    <div class="row">
+      <div style="width:470px;flex:none" class="card">
+        <h3>Sensitivity is a staffing decision in disguise</h3>
+        <p class="q">The revenue-assurance team is two people and can genuinely investigate about 8 cases a week.</p>
+        <div id="chartAnom"></div>
+      </div>
+      <div class="col stack">
+        <div class="grid3">
+          <div class="card tile"><p class="label">Bypass / SIM-box</p><div class="value" style="font-size:22px">Pattern 1</div><p class="note">Enormous international minutes, almost no data, a small bill for all that traffic</p></div>
+          <div class="card tile"><p class="label">Subscription fraud</p><div class="value" style="font-size:22px">Pattern 2</div><p class="note">Usage climbs month on month, revenue drops to zero, payments start failing</p></div>
+          <div class="card tile"><p class="label">Revenue leakage</p><div class="value" style="font-size:22px">Pattern 3</div><p class="note">A month with real usage billed at exactly ₹0 — a billing fault, not fraud</p></div>
+        </div>
+        <div class="card ok">
+          <h3><span class="badge good">chosen</span> contamination 0.01 — 192 cases, ₹86,400 of analyst time</h3>
+          <p class="small" style="margin:6px 0 0">
+            7.4 cases a week fits an 8-a-week team with a little slack. <strong>What we give up:</strong>
+            the 0.02 setting surfaces 192 more cases we will never look at. To justify it we would need
+            either a third analyst or evidence from the first hundred investigations that the hit rate
+            is high enough to pay for one — which is exactly what this quarter's queue produces.
+          </p>
+        </div>
+        <div class="card flag">
+          <h3>A flag is a case, never a conclusion</h3>
+          <p class="small" style="margin:0">
+            Contamination is not discovered in the data — it is a decision about how many cases you are
+            willing to open, dressed up as a parameter. We hand-classified the top twenty flags with
+            subscriber context attached; several were ordinary heavy users and not a problem at all.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>Unlabelled cases</span><span>Isolation forest sized to team capacity</span><span class="num"></span></div>
+</section>
+
+<!-- ======================= 10 · DASHBOARD ======================= -->
+<section class="slide">
+  <p class="kicker">The operational view</p>
+  <h1 class="title">Four panels, four questions<span class="thin"> — each sayable in one sentence</span></h1>
+  <p class="sub">
+    If nobody on the team can state the question a panel answers, the panel is deleted. Each panel
+    also declares its <em>grain</em>, because the aggregation that suits a wallboard is not the
+    aggregation that suits a decision.
+  </p>
+  <div class="body">
+    <div class="grid4" style="height:100%;align-content:start">
+      <div class="card">
+        <h3>1 · Where is the risk?</h3>
+        <p class="q">"Which segment is churning fastest right now?"</p>
+        <div id="dashA"></div>
+        <p class="tiny" style="margin:10px 0 0"><strong>Grain:</strong> one row per subscriber, refreshed nightly.</p>
+      </div>
+      <div class="card">
+        <h3>2 · Where is the money?</h3>
+        <p class="q">"Which segment has the largest lifetime value at risk?"</p>
+        <div id="dashB"></div>
+        <p class="tiny" style="margin:10px 0 0"><strong>Grain:</strong> segment totals — deliberately <em>not</em> per-subscriber, because this panel is a budgeting question.</p>
+      </div>
+      <div class="card">
+        <h3>3 · Is spend paying?</h3>
+        <p class="q">"Are contacted subscribers retained more often than the held-back control?"</p>
+        <div style="padding:18px 0 14px;text-align:center">
+          <div style="font-size:34px;font-weight:660;color:var(--muted);letter-spacing:-.02em">— · —</div>
+          <p class="tiny" style="margin:8px auto 0;max-width:200px">
+            Empty by design. This panel has no data until the holdout test on slide 14 runs. We would
+            rather ship an honest blank than a number we invented.
+          </p>
+        </div>
+        <p class="tiny" style="margin:6px 0 0"><strong>Grain:</strong> one row per contact attempt.</p>
+      </div>
+      <div class="card">
+        <h3>4 · Who is on today's list?</h3>
+        <p class="q">"Which 40 subscribers should the team ring before lunch?"</p>
+        <table style="margin-top:8px;font-size:12px">
+          <thead><tr><th>Rank</th><th>Risk</th><th>ARPU</th><th>Exp. loss</th></tr></thead>
+          <tbody>
+            <tr><td class="w">1</td><td>0.86</td><td>₹812</td><td>₹8,380</td></tr>
+            <tr><td class="w">2</td><td>0.79</td><td>₹848</td><td>₹8,039</td></tr>
+            <tr><td class="w">3</td><td>0.91</td><td>₹704</td><td>₹7,688</td></tr>
+            <tr class="dim"><td class="w">…</td><td>…</td><td>…</td><td>…</td></tr>
+            <tr><td class="w">40</td><td>0.62</td><td>₹430</td><td>₹3,199</td></tr>
+          </tbody>
+        </table>
+        <p class="tiny" style="margin:8px 0 0"><strong>Grain:</strong> one row per subscriber. Illustrative rows — shape of the live table, sorted on expected loss.</p>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>Dashboard</span><span>Four panels · grain declared on each</span><span class="num"></span></div>
+</section>
+
+<!-- ======================= 11 · COSTED COMPARISON ======================= -->
+<section class="slide">
+  <p class="kicker">The costed comparison</p>
+  <h1 class="title">Three options for segment 0<span class="thin"> — one of them is doing nothing</span></h1>
+  <p class="sub">
+    392 subscribers, churning at 40%, worth ₹5,880 each in lifetime value: <strong>₹9.2 lakh</strong>
+    walks out of the door if we do nothing. Here is what it costs to stop some of it.
+  </p>
+  <div class="body">
+    <div class="row">
+      <div class="col">
+        <div class="card">
+          <h3>Net value of each option</h3>
+          <p class="q">net = (subscribers × churn rate × effectiveness × ₹5,880) − (subscribers × cost per contact)</p>
+          <div id="chartOpts"></div>
+          <table style="margin-top:6px">
+            <thead><tr><th>Option</th><th>Cost/sub</th><th>Spend</th><th>Subs saved</th><th>Net value</th><th>Return</th></tr></thead>
+            <tbody>
+              <tr class="dim"><td class="w">Do nothing</td><td>₹0</td><td>₹0</td><td>0.0</td><td>₹0</td><td>—</td></tr>
+              <tr class="hi"><td class="w">Retention call</td><td>₹300</td><td>₹1,17,600</td><td>23.5</td><td>+₹20,698</td><td>1.18×</td></tr>
+              <tr><td class="w">Bill credit + call</td><td>₹550</td><td>₹2,15,600</td><td>39.2</td><td>+₹14,896</td><td>1.07×</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div style="width:390px;flex:none" class="stack">
+        <div class="card flag">
+          <h3>The assumptions — named, because they are ours and not the data's</h3>
+          <table style="margin-top:8px">
+            <tbody>
+              <tr><td class="w">Lifetime value of a lost subscriber</td><td>₹5,880</td></tr>
+              <tr><td class="w">Cost of one retention contact</td><td>₹300</td></tr>
+              <tr><td class="w">Cost of bill credit + contact</td><td>₹550</td></tr>
+              <tr class="hi"><td class="w">Call reduces churn by</td><td>15%</td></tr>
+              <tr class="hi"><td class="w">Credit + call reduces churn by</td><td>25%</td></tr>
+            </tbody>
+          </table>
+          <p class="tiny" style="margin:10px 0 0">
+            <strong>Nothing in our data tells us how well a retention call works.</strong> The 15% and
+            25% figures are the ones we were handed. The two highlighted rows are assumptions, not
+            findings — and the next slide is what happens when we stop trusting them.
+          </p>
+        </div>
+        <div class="card accent">
+          <h3>Break-even, which is the number to remember</h3>
+          <p class="small" style="margin:0">
+            The call only pays if it prevents <strong>more than 12.8%</strong> of the churn in the
+            group. The credit needs <strong>23.4%</strong>. Our assumed 15% clears the first bar by
+            <strong>2.2 points</strong> — a margin far too thin to spend a lakh on with confidence.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>Costed comparison</span><span>Assumptions named · do-nothing included</span><span class="num"></span></div>
+</section>
+
+<!-- ======================= 12 · STRESS TEST ======================= -->
+<section class="slide">
+  <p class="kicker">The stress test</p>
+  <h1 class="title">Halve the assumption everything rests on</h1>
+  <p class="sub">
+    If a retention call is half as effective as we were told — 7.5% instead of 15% — both
+    segment-wide campaigns lose money. A recommendation that does not survive this test is worth
+    knowing about <em>before</em> we stand up, not after.
+  </p>
+  <div class="body">
+    <div class="row">
+      <div class="col">
+        <div class="card">
+          <h3>Net value at the assumed effectiveness, and at half of it</h3>
+          <p class="q">Bars below the zero line destroy value. Only one option stays above it.</p>
+          <div class="legend" style="margin:2px 0 8px">
+            <span><i style="background:var(--s1)"></i>As assumed (15% / 25%)</span>
+            <span><i style="background:var(--s2)"></i>Assumption halved (7.5% / 12.5%)</span>
+          </div>
+          <div id="chartStress"></div>
+        </div>
+      </div>
+      <div style="width:376px;flex:none" class="stack">
+        <div class="card flag">
+          <h3>Blanketing a segment does not survive</h3>
+          <p class="small" style="margin:0">
+            Ringing all 392 subscribers in segment 0 turns a ₹20,698 gain into a
+            <strong>₹48,451 loss</strong>. The bill credit turns into a
+            <strong>₹1,00,352 loss</strong>. The reason is simple: 60% of the people we would ring
+            were never going to leave, and we pay ₹300 for every one of them.
+          </p>
+        </div>
+        <div class="card ok">
+          <h3><span class="badge good">survives</span> Targeting on model score does</h3>
+          <p class="small" style="margin:6px 0 0">
+            At a model score of 0.50 or above, <strong>74%</strong> of the people we ring are genuine
+            churners rather than 40%. That is 92 subscribers, ₹27,600 of spend, and
+            <strong>+₹32,376</strong> net — more than either segment-wide campaign, on a quarter of
+            the budget, and <strong>still positive</strong> when we halve the assumption.
+          </p>
+        </div>
+        <div class="card accent">
+          <h3>The finding hiding in this slide</h3>
+          <p class="small" style="margin:0">
+            Slide 6's cost-optimal threshold was <strong>0.10</strong> — but that arithmetic assumed
+            catching a churner <em>saves</em> them. Once the intervention only works 15% of the time,
+            0.10 loses ₹74 per contact and the optimum flips to the <em>opposite end</em> of the
+            range. The cost of a false negative is not the lifetime value; it is the lifetime value
+            <em>times how often you can actually do something about it</em>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>Stress test</span><span>Halve the uplift · break-even 12.8%</span><span class="num"></span></div>
+</section>
+
+<!-- ======================= 13 · SIAV ======================= -->
+<section class="slide">
+  <p class="kicker">One recommendation · SIAV</p>
+  <h1 class="title">Ring 92 people on Monday<span class="thin"> — and fix the complaints by Q3</span></h1>
+  <div class="body">
+    <div class="row" style="align-items:flex-start;margin-top:4px">
+      <div class="col">
+        <div class="siav">
+          <div class="k first">Situation</div>
+          <div class="v first">
+            We lose <b>24% of the book</b> and we find out from our own retention offer — 84% of
+            leavers had already been sent one, which means a human had already spotted them, one at a
+            time, usually too late to act.
+          </div>
+          <div class="k">Insight</div>
+          <div class="v">
+            <b>392 subscribers (12.2% of the base) churn at 40%</b> — 1.7× the book — and they are
+            defined by <b>3.37 complaints in six months</b>, not by spend. They are annoyed, not
+            price-sensitive. Blanketing all 392 with calls barely breaks even, because 60% of them
+            were never going to leave.
+          </div>
+          <div class="k">Action</div>
+          <div class="v">
+            <b>Two things, in this order.</b><br>
+            <b>1 · This week —</b> ring the <b>92 subscribers scoring ≥ 0.50</b>, ranked by expected
+            loss (risk × ARPU × 12), and hold back a random half as a control so we finally measure
+            what a call is worth.<br>
+            <b>2 · This quarter —</b> send segment 0's complaint volume to a root-cause review. The
+            campaign is a tourniquet; the complaints are the wound.
+          </div>
+          <div class="k">Value</div>
+          <div class="v">
+            <b>+₹32,376 net on ₹27,600 of spend — a 2.2× return</b>, and the only one of our four
+            options still profitable if a call turns out to be half as effective as assumed. Behind
+            it sits the <b>₹9.2 lakh</b> of lifetime value in segment 0 that no call list can reach
+            and only complaint resolution can.
+          </div>
+        </div>
+      </div>
+      <div style="width:344px;flex:none" class="stack" style="margin-top:2px">
+        <div class="card" style="text-align:left">
+          <p class="label small" style="margin:0 0 2px;color:var(--ink2)">Net value, first cycle</p>
+          <div class="hero" style="font-size:52px;color:var(--success-text)">+₹32,376</div>
+          <p class="tiny" style="margin:8px 0 0">
+            92 contacts · ₹27,600 spend · 10.2 subscribers retained · 2.17× return
+          </p>
+        </div>
+        <div class="card accent">
+          <h3>Why not just ring everybody?</h3>
+          <p class="small" style="margin:0">
+            Because the maths that says "ring 742 of 800" prices a missed churner at the full ₹5,880
+            — as if catching them guaranteed keeping them. It does not. Pricing the <em>intervention</em>
+            honestly shrinks the list by 88% and makes it the only version that pays.
+          </p>
+        </div>
+        <div class="card ok">
+          <h3>What we are asking for</h3>
+          <p class="small" style="margin:0">
+            ₹27,600 of campaign budget, one agent-week, and permission to <em>not</em> call 46 people
+            so we can learn something. No new headcount, no new tooling.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>Recommendation · SIAV</span><span>92 contacts · +₹32,376 · 2.2×</span><span class="num"></span></div>
+</section>
+
+<!-- ======================= 14 · LIMITATION + NEXT ======================= -->
+<section class="slide">
+  <p class="kicker">Honest limitation, and the next week</p>
+  <h1 class="title">The number our recommendation depends on most<span class="thin"> is the one we do not have</span></h1>
+  <div class="body">
+    <div class="row" style="align-items:flex-start">
+      <div class="col">
+        <div class="card flag" style="padding:20px 22px">
+          <p class="kicker" style="margin-bottom:8px">The limitation</p>
+          <h3 style="font-size:21px;line-height:1.3;margin-bottom:10px">
+            Nothing in this dataset says a retention call works. Not once.
+          </h3>
+          <p class="small" style="margin:0 0 12px;font-size:15px">
+            Every rupee figure in this deck runs through one number we were handed rather than
+            measured: that a call prevents <strong>15%</strong> of churn. Our data contains no
+            campaign, no control group and no outcome — so the <em>sign</em> of our recommendation is
+            an assumption, not a finding. Break-even is 12.8%; we assumed 15%. If the true figure is
+            11%, the right answer is to do nothing and we would not know it from anything in here.
+          </p>
+          <p class="small" style="margin:0">
+            We chose the narrow, high-precision list <em>because</em> it is the version that still pays
+            at 7.5% — not because we believe 15%. That is robustness standing in for evidence, and it
+            is not the same thing.
+          </p>
+        </div>
+        <div class="grid2" style="margin-top:14px">
+          <div class="card">
+            <h3>Also on the record</h3>
+            <p class="small" style="margin:0">
+              <strong>157 of 3,200</strong> subscribers carry median-filled values (flagged, never
+              hidden). Our shipped threshold knowingly misses most churners — recall is
+              <strong>0.089</strong>, and we accept that because the calls we do make are the ones
+              that pay. Six months of history is thin for a churn model; segment boundaries will move.
+            </p>
+          </div>
+          <div class="card">
+            <h3>What we are <em>not</em> claiming</h3>
+            <p class="small" style="margin:0">
+              That segment 0's complaints <em>cause</em> its churn. The association is strong (3.37 vs
+              0.5) and the direction is plausible, but this is observational data and we did not run
+              an experiment. "Investigate the complaints" is a hypothesis worth a quarter of
+              somebody's time, not a proven mechanism.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div style="width:396px;flex:none" class="stack">
+        <div class="card ok" style="padding:20px">
+          <p class="kicker" style="margin-bottom:8px">With one more week</p>
+          <h3 style="font-size:17px;line-height:1.35;margin-bottom:10px">
+            Run the holdout test that turns our assumption into a measurement
+          </h3>
+          <table style="margin-top:4px">
+            <tbody>
+              <tr><td class="w">Population</td><td>956 subs scoring ≥ 0.30</td></tr>
+              <tr><td class="w">Contacted</td><td>478</td></tr>
+              <tr><td class="w">Held back (control)</td><td>478</td></tr>
+              <tr><td class="w">Cost</td><td>₹1,43,400</td></tr>
+              <tr class="hi"><td class="w">Buys us</td><td>the real uplift %</td></tr>
+            </tbody>
+          </table>
+          <p class="tiny" style="margin:12px 0 0">
+            One week of calling and six weeks of waiting replaces the single assumption that decides a
+            ₹9.2 lakh question. It is the cheapest number in this deck and the only one we cannot get
+            any other way.
+          </p>
+        </div>
+        <div class="card">
+          <h3>Then, in order</h3>
+          <p class="small" style="margin:0">
+            <strong>2 ·</strong> Join segment 0's complaints to the network KPI feed by home cell — if
+            the annoyance is concentrated in a few cells, this stops being a retention problem and
+            becomes a capacity one.<br>
+            <strong>3 ·</strong> Write the outcome column back into the pipeline so the model retrains
+            on what actually happened.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>Limitation &amp; next steps</span><span>The uplift is assumed, not measured</span><span class="num"></span></div>
+</section>
+
+<!-- ======================= 15 · CLOSE ======================= -->
+<section class="slide">
+  <p class="kicker">One page, if you remember nothing else</p>
+  <h1 class="title">Monday morning</h1>
+  <p class="sub">Four sentences a campaign manager can act on without ever opening the notebook.</p>
+  <div class="body">
+    <div class="grid2" style="gap:22px">
+      <div class="card accent">
+        <h3>What is true</h3>
+        <p class="small" style="margin:6px 0 0;font-size:15px">
+          We lose <strong>24% of 3,200 subscribers</strong> — ₹45.2 lakh of lifetime value — and our
+          only current warning system is a retention offer sent by hand after somebody notices. An
+          honest model scores <strong>0.729</strong>, not the 0.946 we could have claimed.
+        </p>
+      </div>
+      <div class="card accent">
+        <h3>What to do</h3>
+        <p class="small" style="margin:6px 0 0;font-size:15px">
+          Ring the <strong>92 subscribers</strong> scoring ≥ 0.50, highest expected loss first. Hold
+          back a random half as a control. <strong>₹27,600</strong> in, <strong>₹32,376</strong> out,
+          2.2× return — the only option that survives halving our key assumption.
+        </p>
+      </div>
+      <div class="card accent">
+        <h3>What it is really about</h3>
+        <p class="small" style="margin:6px 0 0;font-size:15px">
+          The riskiest 392 subscribers complain <strong>3.37 times in six months</strong> and churn at
+          40%. No call list fixes that. Send those complaints to a root-cause review this quarter —
+          that is where segment 0's <strong>₹9.2 lakh</strong> actually lives.
+        </p>
+      </div>
+      <div class="card flag">
+        <h3>What we do not know</h3>
+        <p class="small" style="margin:6px 0 0;font-size:15px">
+          Whether a retention call works at all. Break-even is <strong>12.8%</strong>; we assumed 15%;
+          our data contains no evidence either way. One week of calling with a held-back control
+          settles it for <strong>₹1,43,400</strong>.
+        </p>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:26px">
+      <div>
+        <p class="tiny" style="margin:0 0 4px">Questions we have already argued about, and would enjoy being asked</p>
+        <p class="small" style="margin:0;max-width:720px">
+          Why we threw away a 0.946 · why the cheapest threshold is not the one we shipped · why we
+          rank on rupees instead of probability · why panel 3 of the dashboard is deliberately empty.
+        </p>
+      </div>
+      <div class="rule" style="margin:0"></div>
+    </div>
+  </div>
+  <div class="foot"><span>TelecomIQ · Track A</span><span>Thank you</span><span class="num"></span></div>
+</section>
+
+</div></div>
+
+<div id="tip"></div>
+
+<div id="ui">
+  <button id="btnPrev" title="Previous (←)">←</button>
+  <span id="count">1 / 15</span>
+  <button id="btnNext" title="Next (→)">→</button>
+  <button id="btnOv" title="Overview (o)">Overview</button>
+  <button id="btnTheme" title="Light / dark (t)">Dark</button>
+  <button id="btnPrint" title="Print / export PDF (p)">PDF</button>
+</div>
+
+<div id="ov"><div id="ovgrid"></div></div>
+
+<script>
+/* ============================================================
+   TEAM — the only thing you need to edit. Replace each name.
+   ============================================================ */
+const TEAM = [
+  { name:"‹add name›", role:"Data &amp; pipeline lead", owns:"Integration script, data dictionary, keeping the notebook running end to end" },
+  { name:"‹add name›", role:"Modelling lead",          owns:"The churn model, the leakage audit, the honest baseline and validation" },
+  { name:"‹add name›", role:"Operations lead",         owns:"The dashboard, the call-list policy, the threshold-vs-capacity decision" },
+  { name:"‹add name›", role:"Business analyst",        owns:"The costed comparison, the named assumptions, the SIAV close" },
+  { name:"‹add name›", role:"Presentation lead",       owns:"This deck, the one-page summary, rehearsing the talk" },
+];
+document.getElementById('teamRows').innerHTML = TEAM.map(m =>
+  `<tr><td class="nm ${m.name.indexOf('‹')===0?'ph':''}">${m.name}</td><td class="ro">${m.role}</td><td class="ow">${m.owns}</td></tr>`
+).join('');
+
+/* ============================================================
+   CHART TOOLKIT — hand-rolled SVG, no dependencies.
+   Values are always directly labelled or present in a table,
+   so a tooltip never gates a number.
+   ============================================================ */
+const NS='http://www.w3.org/2000/svg';
+const el=(n,a={})=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);return e;};
+const inr=n=>'₹'+Math.round(n).toLocaleString('en-IN');
+const lakh=n=>'₹'+(n/100000).toFixed(2).replace(/\.00$/,'')+'L';
+const tip=document.getElementById('tip');
+
+function hoverable(node,html){
+  node.addEventListener('mousemove',e=>{
+    tip.innerHTML=html;tip.style.opacity=1;
+    const r=tip.getBoundingClientRect();
+    tip.style.left=Math.min(e.clientX+14,innerWidth-r.width-10)+'px';
+    tip.style.top=Math.max(e.clientY-r.height-12,8)+'px';
+  });
+  node.addEventListener('mouseleave',()=>tip.style.opacity=0);
+}
+function svg(mount,w,h){
+  const s=el('svg',{viewBox:`0 0 ${w} ${h}`,width:'100%',role:'img'});
+  document.getElementById(mount).appendChild(s);return s;
+}
+/* rounded rect: 4px round on the data end, square at the baseline */
+function barH(x,y,w,hh,r){ // grows rightwards from x
+  r=Math.min(r,w);
+  return `M${x},${y} H${x+w-r} A${r},${r} 0 0 1 ${x+w},${y+r} V${y+hh-r} A${r},${r} 0 0 1 ${x+w-r},${y+hh} H${x} Z`;
+}
+function barV(x,y,w,hh,r){ // grows upwards, y is the top
+  r=Math.min(r,hh);
+  return `M${x},${y+r} A${r},${r} 0 0 1 ${x+r},${y} H${x+w-r} A${r},${r} 0 0 1 ${x+w},${y+r} V${y+hh} H${x} Z`;
+}
+const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* ---------- 1 · leakage bars ---------- */
+function drawLeak(){
+  const W=560,H=150,L=196,R=64,T=14,rowH=42,bt=22;
+  const s=svg('chartLeak',W,H);
+  const data=[
+    {k:'With the leaking columns',v:0.946,dim:true,note:'retention_offer_sent + total_charges left in'},
+    {k:'Leakage removed',v:0.729,dim:false,note:'the number we build every rupee figure on'}
+  ];
+  const x=v=>L+v*(W-L-R);
+  [0,0.25,0.5,0.75,1].forEach(t=>{
+    s.appendChild(el('line',{x1:x(t),x2:x(t),y1:T,y2:T+rowH*2+6,class:'gl'}));
+    const tk=el('text',{x:x(t),y:T+rowH*2+24,class:'tick','text-anchor':'middle'});tk.textContent=t;s.appendChild(tk);
+  });
+  s.appendChild(el('line',{x1:L,x2:L,y1:T,y2:T+rowH*2+6,class:'ax'}));
+  data.forEach((d,i)=>{
+    const y=T+i*rowH+(rowH-bt)/2+3;
+    const p=el('path',{d:barH(L,y,x(d.v)-L,bt,4),fill:d.dim?cssv('--b200'):cssv('--s1')});
+    s.appendChild(p);
+    const lab=el('text',{x:L-12,y:y+bt/2+4,class:'cat','text-anchor':'end'});lab.textContent=d.k;s.appendChild(lab);
+    const val=el('text',{x:x(d.v)+9,y:y+bt/2+4,class:'lbl'});val.textContent=d.v.toFixed(3);s.appendChild(val);
+    const hit=el('rect',{x:L,y:y-8,width:x(d.v)-L,height:bt+16,class:'hit'});
+    hoverable(hit,`<b>${d.v.toFixed(3)}</b> ROC-AUC<br><span style="color:var(--ink2)">${d.note}</span>`);
+    s.appendChild(hit);
+  });
+  // gap annotation
+  const gy=T+rowH*2+6;
+  s.appendChild(el('line',{x1:x(0.729),x2:x(0.946),y1:gy-2,y2:gy-2,stroke:cssv('--critical'),'stroke-width':2}));
+  const g=el('text',{x:(x(0.729)+x(0.946))/2,y:gy+16,class:'ann','text-anchor':'middle',fill:cssv('--critical')});
+  g.textContent='0.217 of pure leakage';s.appendChild(g);
+  const ax=el('text',{x:(L+W-R)/2,y:H-2,class:'ann','text-anchor':'middle'});ax.textContent='ROC-AUC';s.appendChild(ax);
+}
+
+/* ---------- 2 · expected cost by threshold ---------- */
+function drawCost(){
+  const W=560,H=286,L=62,R=22,T=16,B=44;
+  const s=svg('chartCost',W,H);
+  const d=[[0.05,181200],[0.10,177360],[0.15,213240],[0.20,289260],[0.30,545580],[0.50,1030800]];
+  const x=v=>L+(v-0.02)/(0.53-0.02)*(W-L-R);
+  const y=v=>H-B-(v/1100000)*(H-B-T);
+  [0,250000,500000,750000,1000000].forEach(t=>{
+    s.appendChild(el('line',{x1:L,x2:W-R,y1:y(t),y2:y(t),class:'gl'}));
+    const k=el('text',{x:L-9,y:y(t)+4,class:'tick','text-anchor':'end'});
+    k.textContent=t===0?'₹0':'₹'+(t/100000)+'L';s.appendChild(k);
+  });
+  s.appendChild(el('line',{x1:L,x2:W-R,y1:y(0),y2:y(0),class:'ax'}));
+  [0.05,0.1,0.2,0.3,0.4,0.5].forEach(t=>{
+    const k=el('text',{x:x(t),y:H-B+20,class:'tick','text-anchor':'middle'});k.textContent=t.toFixed(2);s.appendChild(k);
+  });
+  const xa=el('text',{x:(L+W-R)/2,y:H-8,class:'ann','text-anchor':'middle'});
+  xa.textContent='Decision threshold — the probability above which we ring somebody';s.appendChild(xa);
+  s.appendChild(el('path',{d:'M'+d.map(p=>`${x(p[0])},${y(p[1])}`).join(' L'),fill:'none',stroke:cssv('--s1'),'stroke-width':2,'stroke-linejoin':'round','stroke-linecap':'round'}));
+  d.forEach(p=>{
+    const key=p[0]===0.10||p[0]===0.50;
+    s.appendChild(el('circle',{cx:x(p[0]),cy:y(p[1]),r:key?5.5:4,fill:key?cssv('--s1'):cssv('--b250'),stroke:cssv('--surface'),'stroke-width':2}));
+    const hit=el('circle',{cx:x(p[0]),cy:y(p[1]),r:14,class:'hit'});
+    hoverable(hit,`threshold <b>${p[0].toFixed(2)}</b><br>expected cost <b>${inr(p[1])}</b>`);
+    s.appendChild(hit);
+  });
+  const a1=el('text',{x:x(0.10)+2,y:y(177360)+26,class:'lbl'});a1.textContent='₹1,77,360';s.appendChild(a1);
+  const a1b=el('text',{x:x(0.10)+2,y:y(177360)+42,class:'ann'});a1b.textContent='cheapest — 0.10';s.appendChild(a1b);
+  const a2=el('text',{x:x(0.50)-8,y:y(1030800)-14,class:'lbl','text-anchor':'end'});a2.textContent='₹10,30,800';s.appendChild(a2);
+  const a2b=el('text',{x:x(0.50)-8,y:y(1030800)+2,class:'ann','text-anchor':'end'});a2b.textContent='the software default — 0.50';s.appendChild(a2b);
+  const m=el('text',{x:x(0.30),y:y(545580)-38,class:'ann','text-anchor':'middle',fill:cssv('--ink2')});
+  m.textContent='5.8× more expensive';s.appendChild(m);
+  const m2=el('text',{x:x(0.30),y:y(545580)-24,class:'ann','text-anchor':'middle',fill:cssv('--ink2')});
+  m2.textContent='on identical predictions';s.appendChild(m2);
+}
+
+/* ---------- 3 · segment bubbles ---------- */
+function drawSeg(){
+  const W=560,H=320,L=62,R=30,T=18,B=48;
+  const s=svg('chartSeg',W,H);
+  const segs=[
+    {i:0,size:392,arpu:239.49,churn:0.40,hi:true},
+    {i:1,size:1628,arpu:204.37,churn:0.23,hi:false},
+    {i:2,size:661,arpu:406.68,churn:0.21,hi:false},
+    {i:3,size:519,arpu:249.96,churn:0.19,hi:false},
+  ];
+  const x=v=>L+(v-180)/(440-180)*(W-L-R);
+  const y=v=>H-B-(v-0.14)/(0.44-0.14)*(H-B-T);
+  [0.15,0.20,0.25,0.30,0.35,0.40].forEach(t=>{
+    s.appendChild(el('line',{x1:L,x2:W-R,y1:y(t),y2:y(t),class:'gl'}));
+    const k=el('text',{x:L-9,y:y(t)+4,class:'tick','text-anchor':'end'});k.textContent=(t*100).toFixed(0)+'%';s.appendChild(k);
+  });
+  [200,250,300,350,400].forEach(t=>{
+    const k=el('text',{x:x(t),y:H-B+20,class:'tick','text-anchor':'middle'});k.textContent='₹'+t;s.appendChild(k);
+  });
+  s.appendChild(el('line',{x1:L,x2:W-R,y1:H-B,y2:H-B,class:'ax'}));
+  s.appendChild(el('line',{x1:L,x2:L,y1:T,y2:H-B,class:'ax'}));
+  // book average reference
+  s.appendChild(el('line',{x1:L,x2:W-R,y1:y(0.2402),y2:y(0.2402),stroke:cssv('--axis'),'stroke-width':1}));
+  const ba=el('text',{x:W-R,y:y(0.2402)-7,class:'ann','text-anchor':'end'});ba.textContent='book average 24.0%';s.appendChild(ba);
+  const ya=el('text',{x:14,y:(T+H-B)/2,class:'ann','text-anchor':'middle',transform:`rotate(-90,14,${(T+H-B)/2})`});
+  ya.textContent='churn rate';s.appendChild(ya);
+  const xa=el('text',{x:(L+W-R)/2,y:H-10,class:'ann','text-anchor':'middle'});xa.textContent='mean ARPU per month';s.appendChild(xa);
+  segs.forEach(g=>{
+    const r=Math.sqrt(g.size)/1.185;
+    s.appendChild(el('circle',{cx:x(g.arpu),cy:y(g.churn),r:r,fill:g.hi?cssv('--s1'):cssv('--b200'),
+      'fill-opacity':g.hi?0.9:0.85,stroke:cssv('--surface'),'stroke-width':2}));
+    const lab=el('text',{x:x(g.arpu),y:y(g.churn)-r-9,class:'lbl','text-anchor':'middle'});
+    lab.textContent=`Segment ${g.i}`;s.appendChild(lab);
+    const lab2=el('text',{x:x(g.arpu),y:y(g.churn)-r+5-14,class:'ann','text-anchor':'middle'});
+    lab2.textContent=`${g.size.toLocaleString('en-IN')} subs · ${(g.churn*100).toFixed(0)}%`;
+    s.appendChild(lab2);
+    const hit=el('circle',{cx:x(g.arpu),cy:y(g.churn),r:Math.max(r,14),class:'hit'});
+    hoverable(hit,`<b>Segment ${g.i}</b><br>${g.size.toLocaleString('en-IN')} subscribers (${(g.size/32).toFixed(1)}%)<br>
+      churn <b>${(g.churn*100).toFixed(0)}%</b> · ARPU <b>₹${g.arpu.toFixed(0)}</b><br>
+      lifetime value at risk <b>${lakh(g.size*g.churn*5880)}</b>`);
+    s.appendChild(hit);
+  });
+}
+
+/* ---------- 4 · complaints by segment (mini) ---------- */
+function drawComp(){
+  const W=400,H=112,L=78,R=54,T=8,bt=14,rowH=24;
+  const s=svg('chartComp',W,H);
+  const d=[{k:'Segment 0',v:3.37,hi:true},{k:'Segment 2',v:0.69,hi:false},{k:'Segment 3',v:0.57,hi:false},{k:'Segment 1',v:0.46,hi:false}];
+  const x=v=>L+v/3.8*(W-L-R);
+  d.forEach((r,i)=>{
+    const y=T+i*rowH;
+    s.appendChild(el('path',{d:barH(L,y,Math.max(x(r.v)-L,2),bt,4),fill:r.hi?cssv('--s1'):cssv('--b200')}));
+    const lab=el('text',{x:L-10,y:y+bt/2+4,class:'cat','text-anchor':'end',style:'font-size:11.5px'});lab.textContent=r.k;s.appendChild(lab);
+    const val=el('text',{x:x(r.v)+8,y:y+bt/2+4,class:'lbl',style:'font-size:11.5px'});val.textContent=r.v.toFixed(2);s.appendChild(val);
+  });
+  const cap=el('text',{x:L,y:H-6,class:'ann'});cap.textContent='mean complaints per subscriber, 6 months';s.appendChild(cap);
+}
+
+/* ---------- 5 · lifetime value at risk by segment (mini) ---------- */
+function drawLtv(){
+  const W=400,H=112,L=78,R=62,T=8,bt=14,rowH=24;
+  const s=svg('chartLtv',W,H);
+  const d=[
+    {k:'Segment 1',v:2201707,hi:true},{k:'Segment 0',v:921984,hi:false},
+    {k:'Segment 2',v:816203,hi:false},{k:'Segment 3',v:579827,hi:false}
+  ];
+  const x=v=>L+v/2500000*(W-L-R);
+  d.forEach((r,i)=>{
+    const y=T+i*rowH;
+    s.appendChild(el('path',{d:barH(L,y,Math.max(x(r.v)-L,2),bt,4),fill:r.hi?cssv('--s1'):cssv('--b200')}));
+    const lab=el('text',{x:L-10,y:y+bt/2+4,class:'cat','text-anchor':'end',style:'font-size:11.5px'});lab.textContent=r.k;s.appendChild(lab);
+    const val=el('text',{x:x(r.v)+8,y:y+bt/2+4,class:'lbl',style:'font-size:11.5px'});val.textContent=lakh(r.v);s.appendChild(val);
+  });
+  const cap=el('text',{x:L,y:H-6,class:'ann'});cap.textContent='size × churn rate × ₹5,880 lifetime value';s.appendChild(cap);
+}
+
+/* ---------- 6 · anomaly contamination vs capacity ---------- */
+function drawAnom(){
+  const W=430,H=250,L=54,R=18,T=22,B=62;
+  const s=svg('chartAnom',W,H);
+  const d=[
+    {k:'0.005',v:3.7,rows:96,cost:43200,hi:false},
+    {k:'0.01',v:7.4,rows:192,cost:86400,hi:true},
+    {k:'0.02',v:14.8,rows:384,cost:172800,hi:false}
+  ];
+  const y=v=>H-B-(v/17)*(H-B-T);
+  const bw=44,gap=(W-L-R-d.length*bw)/(d.length+1);
+  [0,5,10,15].forEach(t=>{
+    s.appendChild(el('line',{x1:L,x2:W-R,y1:y(t),y2:y(t),class:'gl'}));
+    const k=el('text',{x:L-9,y:y(t)+4,class:'tick','text-anchor':'end'});k.textContent=t;s.appendChild(k);
+  });
+  s.appendChild(el('line',{x1:L,x2:W-R,y1:y(0),y2:y(0),class:'ax'}));
+  d.forEach((r,i)=>{
+    const x=L+gap+i*(bw+gap);
+    s.appendChild(el('path',{d:barV(x,y(r.v),bw,y(0)-y(r.v),4),fill:r.hi?cssv('--s1'):cssv('--b200')}));
+    const val=el('text',{x:x+bw/2,y:y(r.v)-8,class:'lbl','text-anchor':'middle'});val.textContent=r.v.toFixed(1);s.appendChild(val);
+    const k1=el('text',{x:x+bw/2,y:H-B+18,class:'tick','text-anchor':'middle'});k1.textContent=r.k;s.appendChild(k1);
+    const k2=el('text',{x:x+bw/2,y:H-B+33,class:'ann','text-anchor':'middle'});k2.textContent=r.rows+' cases';s.appendChild(k2);
+    const k3=el('text',{x:x+bw/2,y:H-B+47,class:'ann','text-anchor':'middle'});k3.textContent=inr(r.cost);s.appendChild(k3);
+    const hit=el('rect',{x:x-6,y:y(r.v)-12,width:bw+12,height:y(0)-y(r.v)+18,class:'hit'});
+    hoverable(hit,`contamination <b>${r.k}</b><br><b>${r.rows}</b> flagged subscriber-months<br><b>${r.v.toFixed(1)}</b> cases/week · <b>${inr(r.cost)}</b> of analyst time`);
+    s.appendChild(hit);
+  });
+  // capacity line — status warning, always paired with a label
+  s.appendChild(el('line',{x1:L,x2:W-R,y1:y(8),y2:y(8),stroke:cssv('--warning'),'stroke-width':2}));
+  const cl=el('text',{x:W-R,y:y(8)-7,class:'ann','text-anchor':'end',fill:cssv('--ink2')});
+  cl.textContent='team capacity — 8 cases/week';s.appendChild(cl);
+  const ya=el('text',{x:L,y:12,class:'ann'});ya.textContent='cases per week';s.appendChild(ya);
+  const xa=el('text',{x:(L+W-R)/2,y:H-4,class:'ann','text-anchor':'middle'});xa.textContent='contamination setting';s.appendChild(xa);
+}
+
+/* ---------- 7 · three options, net value ---------- */
+function drawOpts(){
+  const W=546,H=150,L=150,R=90,T=10,bt=22,rowH=42;
+  const s=svg('chartOpts',W,H);
+  const d=[
+    {k:'Do nothing',v:0,note:'₹9,21,984 of lifetime value walks out'},
+    {k:'Retention call',v:20698,hi:true,note:'392 contacts × ₹300 · 15% assumed uplift'},
+    {k:'Bill credit + call',v:14896,note:'392 contacts × ₹550 · 25% assumed uplift'}
+  ];
+  const x=v=>L+v/24000*(W-L-R);
+  [0,10000,20000].forEach(t=>{
+    s.appendChild(el('line',{x1:x(t),x2:x(t),y1:T,y2:T+rowH*3-14,class:'gl'}));
+    const k=el('text',{x:x(t),y:T+rowH*3+2,class:'tick','text-anchor':'middle'});
+    k.textContent=t===0?'₹0':'₹'+(t/1000)+'k';s.appendChild(k);
+  });
+  s.appendChild(el('line',{x1:L,x2:L,y1:T,y2:T+rowH*3-14,class:'ax'}));
+  d.forEach((r,i)=>{
+    const y=T+i*rowH+(rowH-bt)/2-4;
+    if(r.v>0) s.appendChild(el('path',{d:barH(L,y,x(r.v)-L,bt,4),fill:r.hi?cssv('--s1'):cssv('--b250')}));
+    const lab=el('text',{x:L-12,y:y+bt/2+4,class:'cat','text-anchor':'end'});lab.textContent=r.k;s.appendChild(lab);
+    const val=el('text',{x:(r.v>0?x(r.v):L)+9,y:y+bt/2+4,class:'lbl'});
+    val.textContent=r.v>0?'+'+inr(r.v):'₹0 — the reference point';s.appendChild(val);
+    const hit=el('rect',{x:L,y:y-8,width:Math.max(x(r.v)-L,16),height:bt+16,class:'hit'});
+    hoverable(hit,`<b>${r.k}</b><br>net value <b>${r.v>0?'+'+inr(r.v):inr(0)}</b><br><span style="color:var(--ink2)">${r.note}</span>`);
+    s.appendChild(hit);
+  });
+  const xa=el('text',{x:(L+W-R)/2,y:H-4,class:'ann','text-anchor':'middle'});
+  xa.textContent='net value over six months, segment 0 (392 subscribers)';s.appendChild(xa);
+}
+
+/* ---------- 8 · stress test, grouped, signed ---------- */
+function drawStress(){
+  const W=560,H=300,L=176,R=96,T=14,B=40;
+  const s=svg('chartStress',W,H);
+  const d=[
+    {k:'Do nothing',            base:0,      half:0},
+    {k:'Retention call (all 392)',base:20698,  half:-48451},
+    {k:'Bill credit + call',    base:14896,  half:-100352},
+    {k:'Model-targeted call',   base:32376,  half:2383, hi:true}
+  ];
+  const lo=-110000,hi=45000;
+  const x=v=>L+(v-lo)/(hi-lo)*(W-L-R);
+  const rowH=(H-T-B)/d.length, bt=15;
+  [-100000,-50000,0,25000].forEach(t=>{
+    const zero=t===0;
+    s.appendChild(el('line',{x1:x(t),x2:x(t),y1:T-4,y2:H-B,stroke:zero?cssv('--axis'):cssv('--grid'),'stroke-width':zero?1.5:1}));
+    const k=el('text',{x:x(t),y:H-B+18,class:'tick','text-anchor':'middle'});
+    k.textContent=t===0?'₹0':(t<0?'−':'')+'₹'+Math.abs(t/1000)+'k';s.appendChild(k);
+  });
+  d.forEach((r,i)=>{
+    const top=T+i*rowH+6;
+    const lab=el('text',{x:L-14,y:top+bt+6,class:'cat','text-anchor':'end'});lab.textContent=r.k;s.appendChild(lab);
+    [['base',cssv('--s2'),0],['half',cssv('--s2'),1]].forEach(()=>{});
+    [{key:'base',fill:cssv('--s1'),row:0,name:'as assumed'},{key:'half',fill:cssv('--s2'),row:1,name:'halved'}].forEach(ser=>{
+      const v=r[ser.key];
+      const y=top+ser.row*(bt+2);
+      if(v!==0){
+        const from=Math.min(x(0),x(v)), w=Math.abs(x(v)-x(0));
+        // 4px round on the data end only
+        const dd = v>0 ? barH(x(0),y,w,bt,4)
+                       : `M${x(v)+4},${y} H${x(0)} V${y+bt} H${x(v)+4} A4,4 0 0 1 ${x(v)},${y+bt-4} V${y+4} A4,4 0 0 1 ${x(v)+4},${y} Z`;
+        s.appendChild(el('path',{d:dd,fill:ser.fill}));
+        const val=el('text',{x:v>0?x(v)+9:x(v)-9,y:y+bt/2+4,class:'lbl','text-anchor':v>0?'start':'end'});
+        val.textContent=(v>0?'+':'−')+inr(Math.abs(v));s.appendChild(val);
+        const hit=el('rect',{x:from-4,y:y-2,width:w+8,height:bt+4,class:'hit'});
+        hoverable(hit,`<b>${r.k}</b><br>${ser.name}: net <b>${(v>0?'+':'−')+inr(Math.abs(v))}</b>`);
+        s.appendChild(hit);
+      }else{
+        const val=el('text',{x:x(0)+9,y:y+bt/2+4,class:'ann'});val.textContent=ser.row===0?'₹0 · the reference point':'';s.appendChild(val);
+      }
+    });
+  });
+  const xa=el('text',{x:(L+W-R)/2,y:H-6,class:'ann','text-anchor':'middle'});
+  xa.textContent='net value — left of the zero line destroys value';s.appendChild(xa);
+}
+
+/* ---------- 9/10 · dashboard mini panels ---------- */
+function drawDashA(){
+  const W=250,H=136,L=62,R=44,T=8,bt=13,rowH=26;
+  const s=svg('dashA',W,H);
+  const d=[{k:'Segment 0',v:0.40,hi:true},{k:'Segment 1',v:0.23},{k:'Segment 2',v:0.21},{k:'Segment 3',v:0.19}];
+  const x=v=>L+v/0.46*(W-L-R);
+  d.forEach((r,i)=>{
+    const y=T+i*rowH;
+    s.appendChild(el('path',{d:barH(L,y,x(r.v)-L,bt,4),fill:r.hi?cssv('--s1'):cssv('--b200')}));
+    const lab=el('text',{x:L-9,y:y+bt/2+4,class:'cat','text-anchor':'end',style:'font-size:11px'});lab.textContent=r.k;s.appendChild(lab);
+    const val=el('text',{x:x(r.v)+7,y:y+bt/2+4,class:'lbl',style:'font-size:11px'});val.textContent=(r.v*100).toFixed(0)+'%';s.appendChild(val);
+  });
+  s.appendChild(el('line',{x1:x(0.2402),x2:x(0.2402),y1:T-3,y2:T+rowH*4-8,stroke:cssv('--axis'),'stroke-width':1}));
+  const ba=el('text',{x:L,y:H-6,class:'ann',style:'font-size:10.5px'});ba.textContent='vertical rule = book average 24.0%';s.appendChild(ba);
+}
+function drawDashB(){
+  const W=250,H=136,L=62,R=52,T=8,bt=13,rowH=26;
+  const s=svg('dashB',W,H);
+  const d=[{k:'Segment 1',v:2201707,hi:true},{k:'Segment 0',v:921984},{k:'Segment 2',v:816203},{k:'Segment 3',v:579827}];
+  const x=v=>L+v/2500000*(W-L-R);
+  d.forEach((r,i)=>{
+    const y=T+i*rowH;
+    s.appendChild(el('path',{d:barH(L,y,x(r.v)-L,bt,4),fill:r.hi?cssv('--s1'):cssv('--b200')}));
+    const lab=el('text',{x:L-9,y:y+bt/2+4,class:'cat','text-anchor':'end',style:'font-size:11px'});lab.textContent=r.k;s.appendChild(lab);
+    const val=el('text',{x:x(r.v)+7,y:y+bt/2+4,class:'lbl',style:'font-size:11px'});val.textContent=lakh(r.v);s.appendChild(val);
+  });
+  const ba=el('text',{x:L,y:H-6,class:'ann',style:'font-size:10.5px'});ba.textContent='₹23.4L at risk in total';s.appendChild(ba);
+}
+
+/* ---------- render all ---------- */
+function renderCharts(){
+  ['chartLeak','chartCost','chartSeg','chartComp','chartLtv','chartAnom','chartOpts','chartStress','dashA','dashB']
+    .forEach(id=>{const n=document.getElementById(id);if(n)n.innerHTML='';});
+  drawLeak();drawCost();drawSeg();drawComp();drawLtv();drawAnom();drawOpts();drawStress();drawDashA();drawDashB();
+}
+renderCharts();
+
+/* ============================================================
+   DECK NAVIGATION
+   ============================================================ */
+const slides=[...document.querySelectorAll('.slide')];
+const N=slides.length;
+let cur=0;
+const bar=document.getElementById('bar'), count=document.getElementById('count');
+slides.forEach((s,i)=>{const n=s.querySelector('.foot .num');if(n)n.textContent=`${i+1} / ${N}`;});
+
+function show(i){
+  cur=Math.max(0,Math.min(N-1,i));
+  slides.forEach((s,k)=>s.classList.toggle('on',k===cur));
+  bar.style.width=((cur+1)/N*100)+'%';
+  count.textContent=`${cur+1} / ${N}`;
+  [...document.querySelectorAll('.thumb')].forEach((t,k)=>t.classList.toggle('cur',k===cur));
+  location.hash=cur+1;
+}
+function fit(){
+  const k=Math.min(innerWidth/1280,innerHeight/720)*0.965;
+  document.getElementById('scaler').style.transform=`scale(${k})`;
+}
+addEventListener('resize',fit);fit();
+
+document.getElementById('btnNext').onclick=()=>show(cur+1);
+document.getElementById('btnPrev').onclick=()=>show(cur-1);
+document.getElementById('btnPrint').onclick=()=>print();
+const ov=document.getElementById('ov');
+document.getElementById('btnOv').onclick=toggleOv;
+document.getElementById('btnTheme').onclick=toggleTheme;
+
+function toggleTheme(){
+  const dark=document.documentElement.dataset.theme==='dark';
+  document.documentElement.dataset.theme=dark?'light':'dark';
+  document.getElementById('btnTheme').textContent=dark?'Dark':'Light';
+  renderCharts();buildOv();
+}
+function buildOv(){
+  const g=document.getElementById('ovgrid');g.innerHTML='';
+  slides.forEach((s,i)=>{
+    const t=document.createElement('div');t.className='thumb'+(i===cur?' cur':'');
+    const w=document.createElement('div');w.className='tw';
+    const c=s.cloneNode(true);
+    c.classList.add('on');
+    c.style.cssText='position:absolute;top:0;left:0;transform:scale(.2578);transform-origin:top left;box-shadow:none';
+    w.appendChild(c);
+    const n=document.createElement('div');n.className='tn';n.textContent=i+1;w.appendChild(n);
+    const tt=document.createElement('div');tt.className='tt';
+    tt.textContent=(s.querySelector('h1.title')||{textContent:''}).textContent.trim();
+    t.appendChild(w);t.appendChild(tt);
+    t.onclick=()=>{show(i);ov.classList.remove('on')};
+    g.appendChild(t);
+  });
+}
+function toggleOv(){
+  if(!ov.classList.contains('on')) buildOv();
+  ov.classList.toggle('on');
+}
+
+addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '){show(cur+1);e.preventDefault();}
+  else if(e.key==='ArrowLeft'||e.key==='PageUp'){show(cur-1);e.preventDefault();}
+  else if(e.key==='Home'){show(0);}
+  else if(e.key==='End'){show(N-1);}
+  else if(e.key==='o'||e.key==='O'){toggleOv();}
+  else if(e.key==='t'||e.key==='T'){toggleTheme();}
+  else if(e.key==='p'||e.key==='P'){print();}
+  else if(e.key==='Escape'){ov.classList.remove('on');}
+  else if(/^[1-9]$/.test(e.key)){show(+e.key-1);}
+});
+document.getElementById('stage').addEventListener('click',e=>{
+  if(e.target.closest('#ui'))return;
+  show(e.clientX>innerWidth*0.5?cur+1:cur-1);
+});
+
+const start=parseInt(location.hash.slice(1),10);
+show(Number.isFinite(start)&&start>0?start-1:0);
+</script>
+</body>
+</html>

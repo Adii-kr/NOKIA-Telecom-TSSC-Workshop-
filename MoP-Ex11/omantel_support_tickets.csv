@@ -1,0 +1,246 @@
+ticket_id,ticket_text,team
+TKT70000,Poor coverage inside my building in Salalah,Network
+TKT70001,I am getting no signal at all near Sohar,Network
+TKT70002,SIM activation failed twice today,SIM_Activation
+TKT70003,I would like to downgrade my current plan,Plan_Change
+TKT70004,Please help me switch to postpaid,Plan_Change
+TKT70005,My SIM shows no service after activation,SIM_Activation
+TKT70006,I would like to downgrade my current plan,Plan_Change
+TKT70007,I was charged twice for the same plan,Billing
+TKT70008,Calls keep dropping every few minutes in Nizwa,Network
+TKT70009,I was overcharged and need this corrected,Billing
+TKT70010,"The network is very weak in Muscat, calls keep dropping",Network
+TKT70011,I need to move to a cheaper plan,Plan_Change
+TKT70012,Please explain the extra charges on my invoice,Billing
+TKT70013,How do I activate international roaming for Nizwa,SIM_Activation
+TKT70014,Can you explain the charges on my last invoice,Billing
+TKT70015,My new SIM card is not activating,SIM_Activation
+TKT70016,How do I change my subscription plan,Plan_Change
+TKT70017,"The network is very weak in Sohar, calls keep dropping",Network
+TKT70018,There is no network signal in Sohar,Network
+TKT70019,My SIM shows no service after activation,SIM_Activation
+TKT70020,No internet connection for two days in Nizwa,Network
+TKT70021,My connection is unstable since yesterday,Network
+TKT70022,I was overcharged and need this corrected,Billing
+TKT70023,Poor coverage inside my building in Nizwa,Network
+TKT70024,I want to upgrade to a bigger data plan,Plan_Change
+TKT70025,My bill amount is higher than expected this month,Billing
+TKT70026,Internet is down in my area since this morning,Network
+TKT70027,I want a refund for an incorrect charge,Billing
+TKT70028,The eSIM QR code is not working for activation,SIM_Activation
+TKT70029,I bought a new eSIM and it will not activate,SIM_Activation
+TKT70030,My bill amount is higher than expected this month,Billing
+TKT70031,How do I change my subscription plan,Plan_Change
+TKT70032,I am getting no signal at all near Muscat,Network
+TKT70033,My data speed is extremely slow today,Network
+TKT70034,Poor coverage inside my building in Nizwa,Network
+TKT70035,The National Day offer was not applied to my bill,Billing
+TKT70036,Please explain the extra charges on my invoice,Billing
+TKT70037,Please help me switch to postpaid,Plan_Change
+TKT70038,My new SIM card is not activating,SIM_Activation
+TKT70039,I would like to downgrade my current plan,Plan_Change
+TKT70040,There is a duplicate charge on my statement,Billing
+TKT70041,There is a duplicate charge on my statement,Billing
+TKT70042,Can you explain the charges on my last invoice,Billing
+TKT70043,There is no network signal in Nizwa,Network
+TKT70044,Please help me switch to postpaid,Plan_Change
+TKT70045,My connection is unstable since yesterday,Network
+TKT70046,I want to switch to a family plan,Plan_Change
+TKT70047,I am getting no signal at all near Nizwa,Network
+TKT70048,What plans do you have for more data,Plan_Change
+TKT70049,I would like to downgrade my current plan,Plan_Change
+TKT70050,I would like to switch to postpaid,Plan_Change
+TKT70051,I was overcharged and need this corrected,Billing
+TKT70052,SIM activation failed twice today,SIM_Activation
+TKT70053,The National Day offer was not applied to my bill,Billing
+TKT70054,My connection is unstable since yesterday,Network
+TKT70055,I want a refund for an incorrect charge,Billing
+TKT70056,I bought a new eSIM and it will not activate,SIM_Activation
+TKT70057,I bought a new eSIM and it will not activate,SIM_Activation
+TKT70058,Activation of my SIM keeps failing,SIM_Activation
+TKT70059,I want to upgrade to a bigger data plan,Plan_Change
+TKT70060,How do I activate international roaming for Nizwa,SIM_Activation
+TKT70061,There is a duplicate charge on my statement,Billing
+TKT70062,SIM activation failed twice today,SIM_Activation
+TKT70063,I want to upgrade to a bigger data plan,Plan_Change
+TKT70064,There is no network signal in Salalah,Network
+TKT70065,Please explain the extra charges on my invoice,Billing
+TKT70066,My data speed is extremely slow today,Network
+TKT70067,My bill amount is higher than expected this month,Billing
+TKT70068,Activation of my SIM keeps failing,SIM_Activation
+TKT70069,I need to move to a cheaper plan,Plan_Change
+TKT70070,SIM activation failed twice today,SIM_Activation
+TKT70071,Can I change my monthly plan to unlimited data,Plan_Change
+TKT70072,Please explain the extra charges on my invoice,Billing
+TKT70073,No internet connection for two days in Nizwa,Network
+TKT70074,How do I change my subscription plan,Plan_Change
+TKT70075,I want to switch to a family plan,Plan_Change
+TKT70076,SIM activation failed twice today,SIM_Activation
+TKT70077,Calls keep dropping every few minutes in Sur,Network
+TKT70078,Poor coverage inside my building in Muscat,Network
+TKT70079,I was charged twice for the same plan,Billing
+TKT70080,I need help activating my replacement SIM,SIM_Activation
+TKT70081,I want a refund for an incorrect charge,Billing
+TKT70082,"The network is very weak in Sur, calls keep dropping",Network
+TKT70083,I was charged twice for the same plan,Billing
+TKT70084,Can I change my monthly plan to unlimited data,Plan_Change
+TKT70085,My new SIM card is not activating,SIM_Activation
+TKT70086,Calls keep dropping every few minutes in Sohar,Network
+TKT70087,The 5G network in Muscat keeps disconnecting,Network
+TKT70088,I am getting no signal at all near Sur,Network
+TKT70089,There is no network signal in Sur,Network
+TKT70090,Calls keep dropping every few minutes in Salalah,Network
+TKT70091,I want to upgrade to a bigger data plan,Plan_Change
+TKT70092,My last payment does not appear on my account,Billing
+TKT70093,I was overcharged and need this corrected,Billing
+TKT70094,I cannot activate the eSIM I purchased,SIM_Activation
+TKT70095,My data speed is extremely slow today,Network
+TKT70096,I want a refund for an incorrect charge,Billing
+TKT70097,I need help activating my replacement SIM,SIM_Activation
+TKT70098,I would like to downgrade my current plan,Plan_Change
+TKT70099,There is a duplicate charge on my statement,Billing
+TKT70100,No internet connection for two days in Sur,Network
+TKT70101,Why is my bill different from last month,Billing
+TKT70102,Please help me switch to postpaid,Plan_Change
+TKT70103,There is a duplicate charge on my statement,Billing
+TKT70104,I need help activating my replacement SIM,SIM_Activation
+TKT70105,No internet connection for two days in Salalah,Network
+TKT70106,I would like to downgrade my current plan,Plan_Change
+TKT70107,I want to upgrade to a bigger data plan,Plan_Change
+TKT70108,How do I activate international roaming for Muscat,SIM_Activation
+TKT70109,What plans do you have for more data,Plan_Change
+TKT70110,Poor coverage inside my building in Nizwa,Network
+TKT70111,The 5G network in Salalah keeps disconnecting,Network
+TKT70112,I want a refund for an incorrect charge,Billing
+TKT70113,Poor coverage inside my building in Muscat,Network
+TKT70114,Why is my bill different from last month,Billing
+TKT70115,How do I activate international roaming for Sohar,SIM_Activation
+TKT70116,I bought a new eSIM and it will not activate,SIM_Activation
+TKT70117,My new SIM card is not activating,SIM_Activation
+TKT70118,There is a duplicate charge on my statement,Billing
+TKT70119,My last payment does not appear on my account,Billing
+TKT70120,The eSIM QR code is not working for activation,SIM_Activation
+TKT70121,My new SIM card is not activating,SIM_Activation
+TKT70122,There is a duplicate charge on my statement,Billing
+TKT70123,No internet connection for two days in Salalah,Network
+TKT70124,How do I activate international roaming for Salalah,SIM_Activation
+TKT70125,Calls keep dropping every few minutes in Sohar,Network
+TKT70126,Poor coverage inside my building in Sur,Network
+TKT70127,My bill amount is higher than expected this month,Billing
+TKT70128,My SIM is not activating please help,SIM_Activation
+TKT70129,The eSIM QR code is not working for activation,SIM_Activation
+TKT70130,No internet connection for two days in Nizwa,Network
+TKT70131,I would like to switch to postpaid,Plan_Change
+TKT70132,My connection is unstable since yesterday,Network
+TKT70133,How do I activate international roaming for Nizwa,SIM_Activation
+TKT70134,Poor coverage inside my building in Sohar,Network
+TKT70135,My bill amount is higher than expected this month,Billing
+TKT70136,"The network is very weak in Nizwa, calls keep dropping",Network
+TKT70137,My SIM is not activating please help,SIM_Activation
+TKT70138,My SIM shows no service after activation,SIM_Activation
+TKT70139,My SIM is not activating please help,SIM_Activation
+TKT70140,My data speed is extremely slow today,Network
+TKT70141,I need help activating my replacement SIM,SIM_Activation
+TKT70142,The National Day offer was not applied to my bill,Billing
+TKT70143,I would like to downgrade my current plan,Plan_Change
+TKT70144,My SIM is not activating please help,SIM_Activation
+TKT70145,There is a duplicate charge on my statement,Billing
+TKT70146,I want to switch to a family plan,Plan_Change
+TKT70147,The 5G network in Sohar keeps disconnecting,Network
+TKT70148,My connection is unstable since yesterday,Network
+TKT70149,How do I change my subscription plan,Plan_Change
+TKT70150,Calls keep dropping every few minutes in Sur,Network
+TKT70151,My bill amount is higher than expected this month,Billing
+TKT70152,My connection is unstable since yesterday,Network
+TKT70153,SIM activation failed twice today,SIM_Activation
+TKT70154,I want to upgrade to a bigger data plan,Plan_Change
+TKT70155,I was charged twice for the same plan,Billing
+TKT70156,My connection is unstable since yesterday,Network
+TKT70157,Can I change my monthly plan to unlimited data,Plan_Change
+TKT70158,Calls keep dropping every few minutes in Muscat,Network
+TKT70159,I was overcharged and need this corrected,Billing
+TKT70160,How do I activate international roaming for Sohar,SIM_Activation
+TKT70161,My SIM is not activating please help,SIM_Activation
+TKT70162,My connection is unstable since yesterday,Network
+TKT70163,I need help activating my replacement SIM,SIM_Activation
+TKT70164,Activation of my SIM keeps failing,SIM_Activation
+TKT70165,My data speed is extremely slow today,Network
+TKT70166,Can you explain the charges on my last invoice,Billing
+TKT70167,The 5G network in Salalah keeps disconnecting,Network
+TKT70168,The National Day offer was not applied to my bill,Billing
+TKT70169,How do I change my subscription plan,Plan_Change
+TKT70170,I would like to downgrade my current plan,Plan_Change
+TKT70171,I want to upgrade to a bigger data plan,Plan_Change
+TKT70172,My data speed is extremely slow today,Network
+TKT70173,I bought a new eSIM and it will not activate,SIM_Activation
+TKT70174,My last payment does not appear on my account,Billing
+TKT70175,No internet connection for two days in Salalah,Network
+TKT70176,I would like to downgrade my current plan,Plan_Change
+TKT70177,Internet is down in my area since this morning,Network
+TKT70178,I bought a new eSIM and it will not activate,SIM_Activation
+TKT70179,I want a refund for an incorrect charge,Billing
+TKT70180,My bill amount is higher than expected this month,Billing
+TKT70181,I was overcharged and need this corrected,Billing
+TKT70182,How do I change my subscription plan,Plan_Change
+TKT70183,I would like to switch to postpaid,Plan_Change
+TKT70184,I was overcharged and need this corrected,Billing
+TKT70185,The 5G network in Salalah keeps disconnecting,Network
+TKT70186,There is no network signal in Sur,Network
+TKT70187,Poor coverage inside my building in Sur,Network
+TKT70188,I want to switch to a family plan,Plan_Change
+TKT70189,Please explain the extra charges on my invoice,Billing
+TKT70190,My data speed is extremely slow today,Network
+TKT70191,The eSIM QR code is not working for activation,SIM_Activation
+TKT70192,I want a refund for an incorrect charge,Billing
+TKT70193,I would like to downgrade my current plan,Plan_Change
+TKT70194,Activation of my SIM keeps failing,SIM_Activation
+TKT70195,How do I change my subscription plan,Plan_Change
+TKT70196,I want to switch to a family plan,Plan_Change
+TKT70197,"The network is very weak in Sohar, calls keep dropping",Network
+TKT70198,Poor coverage inside my building in Salalah,Network
+TKT70199,My last payment does not appear on my account,Billing
+TKT70200,"The network is very weak in Sohar, calls keep dropping",Network
+TKT70201,I want to upgrade to a bigger data plan,Plan_Change
+TKT70202,I cannot activate the eSIM I purchased,SIM_Activation
+TKT70203,I want to upgrade to a bigger data plan,Plan_Change
+TKT70204,Can I change my monthly plan to unlimited data,Plan_Change
+TKT70205,I want to switch to a family plan,Plan_Change
+TKT70206,How do I change my subscription plan,Plan_Change
+TKT70207,The eSIM QR code is not working for activation,SIM_Activation
+TKT70208,No internet connection for two days in Muscat,Network
+TKT70209,Calls keep dropping every few minutes in Sohar,Network
+TKT70210,There is a duplicate charge on my statement,Billing
+TKT70211,The 5G network in Sohar keeps disconnecting,Network
+TKT70212,Calls keep dropping every few minutes in Nizwa,Network
+TKT70213,Can I change my monthly plan to unlimited data,Plan_Change
+TKT70214,I cannot activate the eSIM I purchased,SIM_Activation
+TKT70215,What plans do you have for more data,Plan_Change
+TKT70216,I want to upgrade to a bigger data plan,Plan_Change
+TKT70217,I would like to switch to postpaid,Plan_Change
+TKT70218,My bill amount is higher than expected this month,Billing
+TKT70219,No internet connection for two days in Salalah,Network
+TKT70220,My new SIM card is not activating,SIM_Activation
+TKT70221,Can I change my monthly plan to unlimited data,Plan_Change
+TKT70222,Calls keep dropping every few minutes in Sur,Network
+TKT70223,"The network is very weak in Sohar, calls keep dropping",Network
+TKT70224,SIM activation failed twice today,SIM_Activation
+TKT70225,My bill amount is higher than expected this month,Billing
+TKT70226,How do I activate international roaming for Sohar,SIM_Activation
+TKT70227,My bill amount is higher than expected this month,Billing
+TKT70228,My last payment does not appear on my account,Billing
+TKT70229,I was charged twice for the same plan,Billing
+TKT70230,Can you explain the charges on my last invoice,Billing
+TKT70231,What plans do you have for more data,Plan_Change
+TKT70232,The National Day offer was not applied to my bill,Billing
+TKT70233,I want to upgrade to a bigger data plan,Plan_Change
+TKT70234,I would like to switch to postpaid,Plan_Change
+TKT70235,Why is my bill different from last month,Billing
+TKT70236,Can I change my monthly plan to unlimited data,Plan_Change
+TKT70237,My data speed is extremely slow today,Network
+TKT70238,I would like to switch to postpaid,Plan_Change
+TKT70239,My bill amount is higher than expected this month,Billing
+TKT70240,Why is my bill different from last month,Billing
+TKT70241,My connection is unstable since yesterday,Network
+TKT70242,My bill amount is higher than expected this month,Billing
+TKT70243,I bought a new eSIM and it will not activate,SIM_Activation
+TKT70244,The National Day offer was not applied to my bill,Billing
