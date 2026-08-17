@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "PowerShell(python -c \"import pypdf; print\\('pypdf', pypdf.__version__\\)\" ; python -c \"import fitz; print\\('pymupdf ok'\\)\" ; python -c \"import pdfplumber; print\\('pdfplumber ok'\\)\" ; python -c \"import PyPDF2; print\\('PyPDF2 ok'\\)\")",
-      "PowerShell(python -c \"from pypdf import PdfReader; import sys; r=PdfReader\\(r'D:\\\\AIML Telecom Workshop\\\\WORKSHOP\\\\CapstonProject2\\\\New folder\\\\Final_Capstone_Project_Brief.pdf'\\); print\\('PAGES',len\\(r.pages\\)\\); [print\\('===PAGE',i+1,'===\\\\n'+\\(p.extract_text\\(\\) or ''\\)\\) for i,p in enumerate\\(r.pages\\)]\")"
-    ]
-  }
-}
