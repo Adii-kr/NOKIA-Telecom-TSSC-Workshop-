@@ -1,0 +1,4 @@
+cell_id,window_start,window_end,maintenance_id,reason
+CELL-MUM-02,2026-08-04 02:00,2026-08-04 04:00,MW-2026-0814,Software upgrade - BTS baseband
+CELL-KOL-03,2026-08-05 01:30,2026-08-05 03:00,MW-2026-0815,Antenna tilt optimisation
+CELL-BLR-02,2026-08-06 02:00,2026-08-06 03:30,MW-2026-0816,Transport link migration
